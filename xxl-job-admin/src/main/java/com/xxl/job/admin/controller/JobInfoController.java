@@ -71,6 +71,12 @@ public class JobInfoController {
 		return "jobinfo/jobinfo.index";
 	}
 
+	/**
+	 * 根据权限筛选job
+	 * @param request
+	 * @param jobGroupList_all
+	 * @return
+	 */
 	public static List<XxlJobGroup> filterJobGroupByRole(HttpServletRequest request, List<XxlJobGroup> jobGroupList_all){
 		List<XxlJobGroup> jobGroupList = new ArrayList<>();
 		if (jobGroupList_all!=null && jobGroupList_all.size()>0) {
