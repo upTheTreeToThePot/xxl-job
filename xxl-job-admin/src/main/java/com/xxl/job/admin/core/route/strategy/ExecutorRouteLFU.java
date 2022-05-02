@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentMap;
  *
  * Created by xuxueli on 17/3/10.
  */
+// 最不经常使用（使用频次最低的机器）
 public class ExecutorRouteLFU extends ExecutorRouter {
 
     private static ConcurrentMap<Integer, HashMap<String, Integer>> jobLfuMap = new ConcurrentHashMap<Integer, HashMap<String, Integer>>();
@@ -25,11 +26,13 @@ public class ExecutorRouteLFU extends ExecutorRouter {
         // cache clear
         if (System.currentTimeMillis() > CACHE_VALID_TIME) {
             jobLfuMap.clear();
+            // 创建24小时缓存
             CACHE_VALID_TIME = System.currentTimeMillis() + 1000*60*60*24;
         }
 
         // lfu item init
-        HashMap<String, Integer> lfuItemMap = jobLfuMap.get(jobId);     // Key排序可以用TreeMap+构造入参Compare；Value排序暂时只能通过ArrayList；
+        HashMap<String, Integer> lfuItemMap = jobLfuMap.get(jobId);
+        // Key排序可以用TreeMap+构造入参Compare；Value排序暂时只能通过ArrayList；
         if (lfuItemMap == null) {
             lfuItemMap = new HashMap<String, Integer>();
             jobLfuMap.putIfAbsent(jobId, lfuItemMap);   // 避免重复覆盖
@@ -42,6 +45,7 @@ public class ExecutorRouteLFU extends ExecutorRouter {
             }
         }
         // remove old
+        // 移除一些已经不在地址列表中的dead地址
         List<String> delKeys = new ArrayList<>();
         for (String existKey: lfuItemMap.keySet()) {
             if (!addressList.contains(existKey)) {

@@ -68,6 +68,7 @@ public class XxlJobExecutor  {
     public void start() throws Exception {
 
         // init logpath
+        // 初始化日志路径，包括日志地址和glue source日志地址
         XxlJobFileAppender.initLogPath(logPath);
 
         // init invoker, admin-client
@@ -75,12 +76,15 @@ public class XxlJobExecutor  {
 
 
         // init JobLogFileCleanThread
+        // 创建日志扫描线程，进行过期日志清理
         JobLogFileCleanThread.getInstance().start(logRetentionDays);
 
         // init TriggerCallbackThread
+        // 创建一个触发回调的线程和一个回调失败的重试线程
         TriggerCallbackThread.getInstance().start();
 
         // init executor-server
+        // 进行 admin 客户端注册
         initEmbedServer(address, ip, port, appname, accessToken);
     }
     public void destroy(){
@@ -243,8 +247,10 @@ public class XxlJobExecutor  {
         newJobThread.start();
         logger.info(">>>>>>>>>>> xxl-job regist JobThread success, jobId:{}, handler:{}", new Object[]{jobId, handler});
 
+        // 存放 jobThread 仓库，并获取老的 jobThread
         JobThread oldJobThread = jobThreadRepository.put(jobId, newJobThread);	// putIfAbsent | oh my god, map's put method return the old value!!!
         if (oldJobThread != null) {
+            // 如果老的 jobThread 存在，那么停止老的 jobThread 的执行
             oldJobThread.toStop(removeOldReason);
             oldJobThread.interrupt();
         }

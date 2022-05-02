@@ -69,7 +69,7 @@ import java.util.TreeSet;
  * <td align="left"><code>, - * /</code></td>
  * </tr>
  * <tr>
- * <td align="left"><code>Day-of-month</code></td>
+ * <td align="left"><code>Day-of-month</code></td> 每月几号
  * <td align="left">&nbsp;</th>
  * <td align="left"><code>1-31</code></td>
  * <td align="left">&nbsp;</th>
@@ -83,7 +83,7 @@ import java.util.TreeSet;
  * <td align="left"><code>, - * /</code></td>
  * </tr>
  * <tr>
- * <td align="left"><code>Day-of-Week</code></td>
+ * <td align="left"><code>Day-of-Week</code></td> 每周第几天
  * <td align="left">&nbsp;</th>
  * <td align="left"><code>1-7 or SUN-SAT</code></td>
  * <td align="left">&nbsp;</th>
@@ -100,6 +100,7 @@ import java.util.TreeSet;
  * <P>
  * The '*' character is used to specify all values. For example, &quot;*&quot; 
  * in the minute field means &quot;every minute&quot;.
+ * * 字符意味着全匹配，每一分钟或者每一秒
  * <P>
  * The '?' character is allowed for the day-of-month and day-of-week fields. It
  * is used to specify 'no specific value'. This is useful when you need to
@@ -107,10 +108,12 @@ import java.util.TreeSet;
  * <P>
  * The '-' character is used to specify ranges For example &quot;10-12&quot; in
  * the hour field means &quot;the hours 10, 11 and 12&quot;.
+ * - 字符表示范围取值
  * <P>
  * The ',' character is used to specify additional values. For example
  * &quot;MON,WED,FRI&quot; in the day-of-week field means &quot;the days Monday,
  * Wednesday, and Friday&quot;.
+ * , 字符表示在某一个单位内使用多个值，比如制定周一、周三、周五 就可以使用 1,3,5
  * <P>
  * The '/' character is used to specify increments. For example &quot;0/15&quot;
  * in the seconds field means &quot;the seconds 0, 15, 30, and 45&quot;. And 
@@ -122,7 +125,9 @@ import java.util.TreeSet;
  * 31, and for months 0 to 11 (JAN to DEC). The &quot;/&quot; character simply helps you turn
  * on every &quot;nth&quot; value in the given set. Thus &quot;7/6&quot; in the
  * month field only turns on month &quot;7&quot;, it does NOT mean every 6th 
- * month, please note that subtlety.  
+ * month, please note that subtlety.
+ * / 字符表示增量， '/' 前面的值表示启动时间，后面的值表示步长，最大值不超过该单位的最大值，
+ * 如果超过单位最大值，对下一个循环也不会累加
  * <P>
  * The 'L' character is allowed for the day-of-month and day-of-week fields.
  * This character is short-hand for &quot;last&quot;, but it has different 
@@ -240,6 +245,7 @@ public final class CronExpression implements Serializable, Cloneable {
         dayMap.put("SAT", 7);
     }
 
+    // 一个 CronExpression 对象，表达式赋值之后无法修改
     private final String cronExpression;
     private TimeZone timeZone = null;
     protected transient TreeSet<Integer> seconds;
@@ -256,7 +262,8 @@ public final class CronExpression implements Serializable, Cloneable {
     protected transient boolean nearestWeekday = false;
     protected transient int lastdayOffset = 0;
     protected transient boolean expressionParsed = false;
-    
+
+    // 最大的年是当前年 + 100
     public static final int MAX_YEAR = Calendar.getInstance().get(Calendar.YEAR) + 100;
 
     /**
@@ -275,7 +282,8 @@ public final class CronExpression implements Serializable, Cloneable {
         }
         
         this.cronExpression = cronExpression.toUpperCase(Locale.US);
-        
+
+        //解析 cornExpression
         buildExpression(this.cronExpression);
     }
     
@@ -298,6 +306,7 @@ public final class CronExpression implements Serializable, Cloneable {
         } catch (ParseException ex) {
             throw new AssertionError();
         }
+        // clone 时区
         if (expression.getTimeZone() != null) {
             setTimeZone((TimeZone) expression.getTimeZone().clone());
         }
@@ -438,6 +447,7 @@ public final class CronExpression implements Serializable, Cloneable {
     ////////////////////////////////////////////////////////////////////////////
 
     protected void buildExpression(String expression) throws ParseException {
+        // 标记当前表达式已经解析
         expressionParsed = true;
 
         try {
@@ -464,40 +474,49 @@ public final class CronExpression implements Serializable, Cloneable {
                 years = new TreeSet<Integer>();
             }
 
+            // 声明目前正在解析的单位
             int exprOn = SECOND;
 
+            // 分割表达式
             StringTokenizer exprsTok = new StringTokenizer(expression, " \t",
                     false);
-
+            // 遍历分割之后的表达式
             while (exprsTok.hasMoreTokens() && exprOn <= YEAR) {
                 String expr = exprsTok.nextToken().trim();
 
                 // throw an exception if L is used with other days of the month
+                // day of month 不允许使用 L 字符
                 if(exprOn == DAY_OF_MONTH && expr.indexOf('L') != -1 && expr.length() > 1 && expr.contains(",")) {
                     throw new ParseException("Support for specifying 'L' and 'LW' with other days of the month is not implemented", -1);
                 }
                 // throw an exception if L is used with other days of the week
+                // day of week 不允许使用 L 字符
                 if(exprOn == DAY_OF_WEEK && expr.indexOf('L') != -1 && expr.length() > 1  && expr.contains(",")) {
                     throw new ParseException("Support for specifying 'L' with other days of the week is not implemented", -1);
                 }
+                // day of week 不允许使用 # 字符
                 if(exprOn == DAY_OF_WEEK && expr.indexOf('#') != -1 && expr.indexOf('#', expr.indexOf('#') +1) != -1) {
                     throw new ParseException("Support for specifying multiple \"nth\" days is not implemented.", -1);
                 }
-                
+
+                // 如果单个时间单位（比如时分秒周月年）有 '，' 则进行分割，将每个值存储在对应的单位 exprOn 上
                 StringTokenizer vTok = new StringTokenizer(expr, ",");
                 while (vTok.hasMoreTokens()) {
                     String v = vTok.nextToken();
                     storeExpressionVals(0, v, exprOn);
                 }
 
+                // 通过exprOn ++，来升级解析的单位
                 exprOn++;
             }
 
+            // 如果exprOn在解析完成之后，小于 day of month，则意味着表达式长度不够，抛出异常
             if (exprOn <= DAY_OF_WEEK) {
                 throw new ParseException("Unexpected end of expression.",
                             expression.length());
             }
 
+            // 在没有配置 year 的情况下， year 默认 *
             if (exprOn <= YEAR) {
                 storeExpressionVals(0, "*", YEAR);
             }
@@ -509,6 +528,7 @@ public final class CronExpression implements Serializable, Cloneable {
             boolean dayOfMSpec = !dom.contains(NO_SPEC);
             boolean dayOfWSpec = !dow.contains(NO_SPEC);
 
+            // ？ 对 day of week 和 day of month 的匹配，两个不能同时使用 ？
             if (!dayOfMSpec || dayOfWSpec) {
                 if (!dayOfWSpec || dayOfMSpec) {
                     throw new ParseException(

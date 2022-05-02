@@ -147,13 +147,15 @@ public class JobGroupController {
 	}
 
 	private List<String> findRegistryByAppName(String appnameParam){
+		// key:appName
+		// value: 对应的地址
 		HashMap<String, List<String>> appAddressMap = new HashMap<String, List<String>>();
 		List<XxlJobRegistry> list = xxlJobRegistryDao.findAll(RegistryConfig.DEAD_TIMEOUT, new Date());
 		if (list != null) {
 			for (XxlJobRegistry item: list) {
 				if (RegistryConfig.RegistType.EXECUTOR.name().equals(item.getRegistryGroup())) {
-					String appname = item.getRegistryKey();
-					List<String> registryList = appAddressMap.get(appname);
+					String appName = item.getRegistryKey();
+					List<String> registryList = appAddressMap.get(appName);
 					if (registryList == null) {
 						registryList = new ArrayList<String>();
 					}
@@ -161,7 +163,7 @@ public class JobGroupController {
 					if (!registryList.contains(item.getRegistryValue())) {
 						registryList.add(item.getRegistryValue());
 					}
-					appAddressMap.put(appname, registryList);
+					appAddressMap.put(appName, registryList);
 				}
 			}
 		}

@@ -5,6 +5,7 @@ import com.xxl.job.admin.core.model.XxlJobLog;
 
 /**
  * @author xuxueli 2020-01-19
+ * 任务报警，目前只有 email 报警
  */
 public interface JobAlarm {
 

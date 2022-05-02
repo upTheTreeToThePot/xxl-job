@@ -17,6 +17,9 @@ import java.util.TreeMap;
  *      b、hash method replace hashCode：String的hashCode可能重复，需要进一步扩大hashCode的取值范围
  * Created by xuxueli on 17/3/10.
  */
+// hash一致性路由
+// 重写address的hash算法，进行哈希处理
+// 这样每个任务的分散程度会比较平均，而且因为地址的hash和job的hash没有改变，所以一个job会固定使用其中的一台机器
 public class ExecutorRouteConsistentHash extends ExecutorRouter {
 
     private static int VIRTUAL_NODE_NUM = 100;

@@ -21,7 +21,8 @@ public class XxlJobCompleter {
 
     /**
      * common fresh handle entrance (limit only once)
-     *
+     * 支持配置子任务依赖，当父任务执行结束且执行成功后将会主动触发一次子任务的执行, 多个子任务用逗号分隔；
+     * 该方法适用在 job 任务执行完成之后，对依赖的子任务进行触发执行
      * @param xxlJobLog
      * @return
      */
@@ -41,7 +42,7 @@ public class XxlJobCompleter {
 
 
     /**
-     * do somethind to finish job
+     * do something to finish job
      */
     private static void finishJob(XxlJobLog xxlJobLog){
 
@@ -49,6 +50,7 @@ public class XxlJobCompleter {
         String triggerChildMsg = null;
         if (XxlJobContext.HANDLE_CODE_SUCCESS == xxlJobLog.getHandleCode()) {
             XxlJobInfo xxlJobInfo = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadById(xxlJobLog.getJobId());
+            // 如果子任务不为空，finishJob
             if (xxlJobInfo!=null && xxlJobInfo.getChildJobId()!=null && xxlJobInfo.getChildJobId().trim().length()>0) {
                 triggerChildMsg = "<br><br><span style=\"color:#00c0ef;\" > >>>>>>>>>>>"+ I18nUtil.getString("jobconf_trigger_child_run") +"<<<<<<<<<<< </span><br>";
 

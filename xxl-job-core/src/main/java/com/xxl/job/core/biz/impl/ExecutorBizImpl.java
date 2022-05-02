@@ -19,6 +19,7 @@ import java.util.Date;
 /**
  * Created by xuxueli on 17/3/1.
  */
+// 用于 core 执行服务器任务
 public class ExecutorBizImpl implements ExecutorBiz {
     private static Logger logger = LoggerFactory.getLogger(ExecutorBizImpl.class);
 
@@ -52,16 +53,19 @@ public class ExecutorBizImpl implements ExecutorBiz {
 
         // valid：jobHandler + jobThread
         GlueTypeEnum glueTypeEnum = GlueTypeEnum.match(triggerParam.getGlueType());
+        // 处理 jobThrad 和 jobHandler
         if (GlueTypeEnum.BEAN == glueTypeEnum) {
 
             // new jobhandler
             IJobHandler newJobHandler = XxlJobExecutor.loadJobHandler(triggerParam.getExecutorHandler());
 
             // valid old jobThread
+            // 触发参数里面的 jobHandler 和 jobThread 里面的 jobHandler 不是同一个
             if (jobThread!=null && jobHandler != newJobHandler) {
                 // change handler, need kill old thread
                 removeOldReason = "change jobhandler or glue type, and terminate the old job thread.";
 
+                // 更换了 jobHandler，或者 glue 类型，停止老 jobHandler的执行
                 jobThread = null;
                 jobHandler = null;
             }
@@ -69,6 +73,8 @@ public class ExecutorBizImpl implements ExecutorBiz {
             // valid handler
             if (jobHandler == null) {
                 jobHandler = newJobHandler;
+                // 如果这个地方 jobHandler 为 null，则证明 jobThread 和 triggerParam 中都没有 jobHandler，
+                // 或 两个 jobHandler 不一致
                 if (jobHandler == null) {
                     return new ReturnT<String>(ReturnT.FAIL_CODE, "job handler [" + triggerParam.getExecutorHandler() + "] not found.");
                 }
@@ -120,6 +126,7 @@ public class ExecutorBizImpl implements ExecutorBiz {
 
         // executor block strategy
         if (jobThread != null) {
+            // 获取阻塞策略，并进行相应的处理
             ExecutorBlockStrategyEnum blockStrategy = ExecutorBlockStrategyEnum.match(triggerParam.getExecutorBlockStrategy(), null);
             if (ExecutorBlockStrategyEnum.DISCARD_LATER == blockStrategy) {
                 // discard when running
@@ -139,10 +146,12 @@ public class ExecutorBizImpl implements ExecutorBiz {
         }
 
         // replace thread (new or exists invalid)
+        // 如果 jobThread 为 null，注册新的 jobThread
         if (jobThread == null) {
             jobThread = XxlJobExecutor.registJobThread(triggerParam.getJobId(), jobHandler, removeOldReason);
         }
 
+        // jobThread 和 jobHandler 已经确定， 将任务触发参数放进触发队列
         // push data to queue
         ReturnT<String> pushResult = jobThread.pushTriggerQueue(triggerParam);
         return pushResult;

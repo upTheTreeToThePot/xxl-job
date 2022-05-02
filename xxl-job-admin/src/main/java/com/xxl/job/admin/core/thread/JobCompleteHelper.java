@@ -32,9 +32,12 @@ public class JobCompleteHelper {
 	private ThreadPoolExecutor callbackThreadPool = null;
 	private Thread monitorThread;
 	private volatile boolean toStop = false;
+	// 声明一个回调线程池，加启动一条控制线程
+	// 控制线程是管理本地保持运行状态超过 10min，且任务注册失败不在线的任务，将他们置为失败状态
 	public void start(){
 
 		// for callback
+		// 声明一条回调线程池
 		callbackThreadPool = new ThreadPoolExecutor(
 				2,
 				20,
@@ -63,6 +66,7 @@ public class JobCompleteHelper {
 			public void run() {
 
 				// wait for JobTriggerPoolHelper-init
+				// 沉睡 50ms 等待 JobTriggerPoolHelper 初始化
 				try {
 					TimeUnit.MILLISECONDS.sleep(50);
 				} catch (InterruptedException e) {

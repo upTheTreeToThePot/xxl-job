@@ -9,11 +9,17 @@ import com.xxl.job.admin.core.util.I18nUtil;
  */
 public enum TriggerTypeEnum {
 
+    // 手动触发
     MANUAL(I18nUtil.getString("jobconf_trigger_type_manual")),
+    // corn 规则触发
     CRON(I18nUtil.getString("jobconf_trigger_type_cron")),
+    // 重试触发
     RETRY(I18nUtil.getString("jobconf_trigger_type_retry")),
+    // 父任务触发
     PARENT(I18nUtil.getString("jobconf_trigger_type_parent")),
+    // api触发
     API(I18nUtil.getString("jobconf_trigger_type_api")),
+    // 任务超时触发
     MISFIRE(I18nUtil.getString("jobconf_trigger_type_misfire"));
 
     private TriggerTypeEnum(String title){

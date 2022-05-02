@@ -9,6 +9,7 @@ import com.xxl.job.core.util.XxlJobRemotingUtil;
  *
  * @author xuxueli 2017-07-28 22:14:52
  */
+// 用于 admin 发送命令
 public class ExecutorBizClient implements ExecutorBiz {
 
     public ExecutorBizClient() {

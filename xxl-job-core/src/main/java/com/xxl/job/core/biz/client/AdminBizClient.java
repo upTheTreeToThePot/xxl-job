@@ -13,6 +13,7 @@ import java.util.List;
  *
  * @author xuxueli 2017-07-28 22:14:52
  */
+// 用于 core 发送执行命令
 public class AdminBizClient implements AdminBiz {
 
     public AdminBizClient() {
@@ -22,6 +23,7 @@ public class AdminBizClient implements AdminBiz {
         this.accessToken = accessToken;
 
         // valid
+        // 保证 addressUrl 以 '/' 结尾
         if (!this.addressUrl.endsWith("/")) {
             this.addressUrl = this.addressUrl + "/";
         }

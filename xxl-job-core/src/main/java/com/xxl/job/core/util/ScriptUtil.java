@@ -77,6 +77,7 @@ public class ScriptUtil {
 
             // log-thread
             final FileOutputStream finalFileOutputStream = fileOutputStream;
+            // 将inputStream copy 进finalFileOutputStream
             inputThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -87,6 +88,7 @@ public class ScriptUtil {
                     }
                 }
             });
+            // 将errStream copy进finalFileOutputStream
             errThread = new Thread(new Runnable() {
                 @Override
                 public void run() {

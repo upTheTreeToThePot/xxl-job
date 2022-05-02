@@ -12,6 +12,8 @@ import java.util.List;
 /**
  * Created by xuxueli on 17/3/10.
  */
+// 故障转移
+// 和忙碌转移一样，去遍历可使用的机器
 public class ExecutorRouteFailover extends ExecutorRouter {
 
     @Override

@@ -34,6 +34,9 @@ public class JobLogFileCleanThread {
             return;
         }
 
+        // 创建一个守护线程，做日志删除
+        // 扫描路径下的日志，如果日志超过存储日期进行删除
+        // 日志创建日期默认 yyyy-mm-dd
         localThread = new Thread(new Runnable() {
             @Override
             public void run() {

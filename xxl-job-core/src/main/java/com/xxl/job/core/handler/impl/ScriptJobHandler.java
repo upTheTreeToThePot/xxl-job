@@ -26,6 +26,7 @@ public class ScriptJobHandler extends IJobHandler {
         this.glueType = glueType;
 
         // clean old script file
+        // 对象创建的时候删除老的脚本路径
         File glueSrcPath = new File(XxlJobFileAppender.getGlueSrcPath());
         if (glueSrcPath.exists()) {
             File[] glueSrcFileList = glueSrcPath.listFiles();
@@ -47,6 +48,7 @@ public class ScriptJobHandler extends IJobHandler {
     @Override
     public void execute() throws Exception {
 
+        // 验证 glueType 类型是脚本类型
         if (!glueType.isScript()) {
             XxlJobHelper.handleFail("glueType["+ glueType +"] invalid.");
             return;
@@ -71,6 +73,7 @@ public class ScriptJobHandler extends IJobHandler {
         String logFileName = XxlJobContext.getXxlJobContext().getJobLogFileName();
 
         // script params：0=param、1=分片序号、2=分片总数
+        // 获取脚本参数
         String[] scriptParams = new String[3];
         scriptParams[0] = XxlJobHelper.getJobParam();
         scriptParams[1] = String.valueOf(XxlJobContext.getXxlJobContext().getShardIndex());
@@ -78,6 +81,7 @@ public class ScriptJobHandler extends IJobHandler {
 
         // invoke
         XxlJobHelper.log("----------- script file:"+ scriptFileName +" -----------");
+        // 脚本执行
         int exitValue = ScriptUtil.execToFile(cmd, scriptFileName, logFileName, scriptParams);
 
         if (exitValue == 0) {

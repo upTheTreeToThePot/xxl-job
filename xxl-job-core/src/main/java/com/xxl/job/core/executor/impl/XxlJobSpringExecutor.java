@@ -77,6 +77,8 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
         }
     }*/
 
+    // 在初始化 jobHandlerRepository 的时候，先对 spring 管理的 bean 进行处理
+    // 将含有 xxlJob 的方法注册进 jobHandlerRepository
     private void initJobHandlerMethodRepository(ApplicationContext applicationContext) {
         if (applicationContext == null) {
             return;
@@ -98,6 +100,7 @@ public class XxlJobSpringExecutor extends XxlJobExecutor implements ApplicationC
             } catch (Throwable ex) {
                 logger.error("xxl-job method-jobhandler resolve error for bean[" + beanDefinitionName + "].", ex);
             }
+            // 如果 annotatedMethods 为空，则证明当前 bean 没有使用 XxlJob 的方法
             if (annotatedMethods==null || annotatedMethods.isEmpty()) {
                 continue;
             }

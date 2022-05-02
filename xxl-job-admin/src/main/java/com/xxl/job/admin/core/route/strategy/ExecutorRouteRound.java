@@ -13,6 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by xuxueli on 17/3/10.
  */
+// 计算每个任务的执行次数，与地址数量取余
+//  可以保证每个任务会在不同的服务器上面执行一次
 public class ExecutorRouteRound extends ExecutorRouter {
 
     private static ConcurrentMap<Integer, AtomicInteger> routeCountEachJob = new ConcurrentHashMap<>();
@@ -39,6 +41,7 @@ public class ExecutorRouteRound extends ExecutorRouter {
 
     @Override
     public ReturnT<String> route(TriggerParam triggerParam, List<String> addressList) {
+        // 随机的路由规则是 拿jobId的调用次次数 % 地址的数量
         String address = addressList.get(count(triggerParam.getJobId())%addressList.size());
         return new ReturnT<String>(address);
     }

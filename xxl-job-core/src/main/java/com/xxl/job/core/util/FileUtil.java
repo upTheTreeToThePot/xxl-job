@@ -23,6 +23,7 @@ public class FileUtil {
      * @param root
      * @return
      */
+    // 递归方式进行文件删除
     public static boolean deleteRecursively(File root) {
         if (root != null && root.exists()) {
             if (root.isDirectory()) {

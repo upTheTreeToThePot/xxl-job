@@ -34,6 +34,7 @@ public class TriggerCallbackThread {
     /**
      * job results callback queue
      */
+    // 回调队列
     private LinkedBlockingQueue<HandleCallbackParam> callBackQueue = new LinkedBlockingQueue<HandleCallbackParam>();
     public static void pushCallBack(HandleCallbackParam callback){
         getInstance().callBackQueue.add(callback);
@@ -55,6 +56,7 @@ public class TriggerCallbackThread {
         }
 
         // callback
+        // 创建一个守护线程，做触发回调
         triggerCallbackThread = new Thread(new Runnable() {
 
             @Override
@@ -84,6 +86,7 @@ public class TriggerCallbackThread {
                 }
 
                 // last callback
+                // 进行最后一次回调尝试
                 try {
                     List<HandleCallbackParam> callbackParamList = new ArrayList<HandleCallbackParam>();
                     int drainToNum = getInstance().callBackQueue.drainTo(callbackParamList);
@@ -105,6 +108,7 @@ public class TriggerCallbackThread {
 
 
         // retry
+        // 对失败的日志文件，进行解析，反序列化，并进行重试
         triggerRetryCallbackThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -163,6 +167,8 @@ public class TriggerCallbackThread {
     private void doCallback(List<HandleCallbackParam> callbackParamList){
         boolean callbackRet = false;
         // callback, will retry if error
+        // 进行回调，对所有的admin客户端进行遍历，
+        // 如果有任何一个客户端进行回调成功，则成功
         for (AdminBiz adminBiz: XxlJobExecutor.getAdminBizList()) {
             try {
                 ReturnT<String> callbackResult = adminBiz.callback(callbackParamList);
@@ -177,6 +183,7 @@ public class TriggerCallbackThread {
                 callbackLog(callbackParamList, "<br>----------- xxl-job job callback error, errorMsg:" + e.getMessage());
             }
         }
+        // 如果没有回调成功，进行日志文件输出
         if (!callbackRet) {
             appendFailCallbackFile(callbackParamList);
         }
@@ -215,6 +222,7 @@ public class TriggerCallbackThread {
 
         File callbackLogFile = new File(failCallbackFileName.replace("{x}", String.valueOf(System.currentTimeMillis())));
         if (callbackLogFile.exists()) {
+            // 防止存在冲突的日志文件，做一百次循环，意味着一台机器同一毫秒可以打印100个错误日志
             for (int i = 0; i < 100; i++) {
                 callbackLogFile = new File(failCallbackFileName.replace("{x}", String.valueOf(System.currentTimeMillis()).concat("-").concat(String.valueOf(i)) ));
                 if (!callbackLogFile.exists()) {

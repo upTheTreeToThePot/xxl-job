@@ -89,6 +89,7 @@ public class JobThread extends Thread{
      * is running job
      * @return
      */
+    // 判断当前 jobThread 是否正在执行 或 触发队列是否 > 0
     public boolean isRunningOrHasQueue() {
         return running || triggerQueue.size()>0;
     }
@@ -231,6 +232,7 @@ public class JobThread extends Thread{
 			TriggerParam triggerParam = triggerQueue.poll();
 			if (triggerParam!=null) {
 				// is killed
+				// 将 triggerQueue 里面没有执行的任务，直接设置为handleFail，放进 callbackQueue 等待执行回调
 				TriggerCallbackThread.pushCallBack(new HandleCallbackParam(
 						triggerParam.getLogId(),
 						triggerParam.getLogDateTime(),

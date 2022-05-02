@@ -77,6 +77,7 @@ public class ExecutorRegistryThread {
                 }
 
                 // registry remove
+                // 当stop标记被修改时，注册循环跳出，进行注册移除
                 try {
                     RegistryParam registryParam = new RegistryParam(RegistryConfig.RegistType.EXECUTOR.name(), appname, address);
                     for (AdminBiz adminBiz: XxlJobExecutor.getAdminBizList()) {

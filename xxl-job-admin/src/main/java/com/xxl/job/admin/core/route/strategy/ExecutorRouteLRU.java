@@ -25,6 +25,7 @@ public class ExecutorRouteLRU extends ExecutorRouter {
     public String route(int jobId, List<String> addressList) {
 
         // cache clear
+        // 设置24h缓存，如果过期清空缓存
         if (System.currentTimeMillis() > CACHE_VALID_TIME) {
             jobLRUMap.clear();
             CACHE_VALID_TIME = System.currentTimeMillis() + 1000*60*60*24;
@@ -38,6 +39,7 @@ public class ExecutorRouteLRU extends ExecutorRouter {
              *      a、accessOrder：true=访问顺序排序（get/put时排序）；false=插入顺序排期；
              *      b、removeEldestEntry：新增元素时将会调用，返回true时会删除最老元素；可封装LinkedHashMap并重写该方法，比如定义最大容量，超出是返回true即可实现固定长度的LRU算法；
              */
+            //通过linkHashMap的每次get/put的时候会进行排序，最新操作的数据会在最后面。 从而取第一个数据就 代表是最久没有被使用的
             lruItem = new LinkedHashMap<String, String>(16, 0.75f, true);
             jobLRUMap.putIfAbsent(jobId, lruItem);
         }
@@ -62,6 +64,8 @@ public class ExecutorRouteLRU extends ExecutorRouter {
         }
 
         // load
+        // 利用 linkedHashMap存储数据的有序性，来保证下一次访问的机器是列表的最后一个？
+        // 取头部的一个元素，也就是最久操作过的数据
         String eldestKey = lruItem.entrySet().iterator().next().getKey();
         String eldestValue = lruItem.get(eldestKey);
         return eldestValue;

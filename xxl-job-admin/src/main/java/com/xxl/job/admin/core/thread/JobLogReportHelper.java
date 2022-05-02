@@ -27,6 +27,8 @@ public class JobLogReportHelper {
 
     private Thread logrThread;
     private volatile boolean toStop = false;
+    // 1。统计三天内执行任务的情况
+    // 2。对7天前过期的 jobLog 进行自动删除，通过 lastCleanLogTime 属性进行过滤，删除任务一天执行一次
     public void start(){
         logrThread = new Thread(new Runnable() {
 
@@ -40,6 +42,7 @@ public class JobLogReportHelper {
                 while (!toStop) {
 
                     // 1、log-report refresh: refresh log report in 3 days
+                    // 统计过去三天的任务执行状况 -- xxlJobLogReport
                     try {
 
                         for (int i = 0; i < 3; i++) {
@@ -68,6 +71,7 @@ public class JobLogReportHelper {
                             xxlJobLogReport.setSucCount(0);
                             xxlJobLogReport.setFailCount(0);
 
+                            // 统计正在运行的和已经运行完成的任务
                             Map<String, Object> triggerCountMap = XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().findLogReport(todayFrom, todayTo);
                             if (triggerCountMap!=null && triggerCountMap.size()>0) {
                                 int triggerDayCount = triggerCountMap.containsKey("triggerDayCount")?Integer.valueOf(String.valueOf(triggerCountMap.get("triggerDayCount"))):0;
@@ -94,6 +98,8 @@ public class JobLogReportHelper {
                     }
 
                     // 2、log-clean: switch open & once each day
+                    // 自动删除过期的 jobLog，时间设置根据 adminConfig 中的 logretentiondays 来判定
+                    // 根据 logretentiondays 的获取规则可知，7天之内的 jobLog 无法自动过期删除
                     if (XxlJobAdminConfig.getAdminConfig().getLogretentiondays()>0
                             && System.currentTimeMillis() - lastCleanLogTime > 24*60*60*1000) {
 
@@ -120,6 +126,7 @@ public class JobLogReportHelper {
                     }
 
                     try {
+                        // 睡眠一分钟
                         TimeUnit.MINUTES.sleep(1);
                     } catch (Exception e) {
                         if (!toStop) {

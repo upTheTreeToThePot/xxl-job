@@ -21,6 +21,7 @@ public class GlueFactory {
 	public static GlueFactory getInstance(){
 		return glueFactory;
 	}
+	// 刷新glue实例
 	public static void refreshInstance(int type){
 		if (type == 0) {
 			glueFactory = new GlueFactory();
@@ -67,6 +68,7 @@ public class GlueFactory {
 			byte[] md5 = MessageDigest.getInstance("MD5").digest(codeSource.getBytes());
 			String md5Str = new BigInteger(1, md5).toString(16);
 
+			// 利用md5加密的方式，进行缓存key处理
 			Class<?> clazz = CLASS_CACHE.get(md5Str);
 			if(clazz == null){
 				clazz = groovyClassLoader.parseClass(codeSource);

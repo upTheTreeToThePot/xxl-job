@@ -13,6 +13,8 @@ import java.util.List;
 /**
  * Created by xuxueli on 17/3/10.
  */
+// 忙碌转移
+// 遍历所有的地址，尝试发送，如果都没有成功，则路由失败
 public class ExecutorRouteBusyover extends ExecutorRouter {
 
     @Override

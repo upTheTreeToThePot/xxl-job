@@ -21,6 +21,8 @@ public class JobTriggerPoolHelper {
     // ---------------------- trigger pool ----------------------
 
     // fast/slow thread pool
+    // 调度线程池隔离，拆分为”Fast”和”Slow”两个线程池，
+    // 1分钟窗口期内任务耗时达500ms超过10次，该窗口期内判定为慢任务，慢任务自动降级进入”Slow”线程池，避免耗尽调度线程，提高系统稳定性；
     private ThreadPoolExecutor fastTriggerPool = null;
     private ThreadPoolExecutor slowTriggerPool = null;
 
@@ -38,6 +40,7 @@ public class JobTriggerPoolHelper {
                     }
                 });
 
+        // slowTriggerPool 的队列容量会比 fastTriggerPool 大 1000
         slowTriggerPool = new ThreadPoolExecutor(
                 10,
                 XxlJobAdminConfig.getAdminConfig().getTriggerPoolSlowMax(),
@@ -79,6 +82,9 @@ public class JobTriggerPoolHelper {
         // choose thread pool
         ThreadPoolExecutor triggerPool_ = fastTriggerPool;
         AtomicInteger jobTimeoutCount = jobTimeoutCountMap.get(jobId);
+        // 如果当前任务不等于空，并且超时超过十次，将会使用 slowTriggerPool
+        // 当一个任务执行的时候会通过判断 minTim 是否是当前的分钟，如果不是将会清空 jobTimeoutCountMap
+        // 所以过期次数的判断只会针对当前这一分钟
         if (jobTimeoutCount!=null && jobTimeoutCount.get() > 10) {      // job-timeout 10 times in 1 min
             triggerPool_ = slowTriggerPool;
         }
@@ -106,8 +112,10 @@ public class JobTriggerPoolHelper {
 
                     // incr timeout-count-map
                     long cost = System.currentTimeMillis()-start;
+                    // 如果花费时间超过 500ms，将会放入 jobTimeoutCountMap
                     if (cost > 500) {       // ob-timeout threshold 500ms
                         AtomicInteger timeoutCount = jobTimeoutCountMap.putIfAbsent(jobId, new AtomicInteger(1));
+                        // 如果更新过期次数为 1 失败，将会使用原子方式将过期次数 +1
                         if (timeoutCount != null) {
                             timeoutCount.incrementAndGet();
                         }
@@ -133,6 +141,7 @@ public class JobTriggerPoolHelper {
     }
 
     /**
+     * 触发任务
      * @param jobId
      * @param triggerType
      * @param failRetryCount

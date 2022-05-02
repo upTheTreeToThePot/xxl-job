@@ -20,6 +20,7 @@ import java.util.concurrent.*;
 public class JobRegistryHelper {
 	private static Logger logger = LoggerFactory.getLogger(JobRegistryHelper.class);
 
+	// 实现单利模式--实例化一个静态对象，然后通过一个静态 public 对象暴露访问
 	private static JobRegistryHelper instance = new JobRegistryHelper();
 	public static JobRegistryHelper getInstance(){
 		return instance;
@@ -29,9 +30,14 @@ public class JobRegistryHelper {
 	private Thread registryMonitorThread;
 	private volatile boolean toStop = false;
 
+	// 1。创建以恶搞注册或移除的线程池
+	// 2。创建一个注册管理线程，并启动
+	//		管理：定期扫描 超过死亡时间没有更新的注册任务并移除	未死亡的注册任务，刷新他们的地址配置，并更新落库
+	//			死亡时间是线程沉睡时间的三倍，默认沉睡时间是 30s
 	public void start(){
 
 		// for registry or remove
+		// 创建一个注册或移除线程池
 		registryOrRemoveThreadPool = new ThreadPoolExecutor(
 				2,
 				10,
@@ -53,29 +59,34 @@ public class JobRegistryHelper {
 				});
 
 		// for monitor
+		// 声明一个注册管理线程
 		registryMonitorThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				while (!toStop) {
 					try {
 						// auto registry group
+						// 0 代表自动注册
 						List<XxlJobGroup> groupList = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().findByAddressType(0);
 						if (groupList!=null && !groupList.isEmpty()) {
 
 							// remove dead address (admin/executor)
+							// 找到死亡的注册任务，并删除
 							List<Integer> ids = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().findDead(RegistryConfig.DEAD_TIMEOUT, new Date());
 							if (ids!=null && ids.size()>0) {
 								XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().removeDead(ids);
 							}
 
 							// fresh online address (admin/executor)
+							// 获取所有死亡时间内的注册任务，并将他们存放在 appAddressMap 缓存中
+							// appAddressMap key -- appName, value -- 注册任务 value（地址）
 							HashMap<String, List<String>> appAddressMap = new HashMap<String, List<String>>();
 							List<XxlJobRegistry> list = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().findAll(RegistryConfig.DEAD_TIMEOUT, new Date());
 							if (list != null) {
 								for (XxlJobRegistry item: list) {
 									if (RegistryConfig.RegistType.EXECUTOR.name().equals(item.getRegistryGroup())) {
-										String appname = item.getRegistryKey();
-										List<String> registryList = appAddressMap.get(appname);
+										String appName = item.getRegistryKey();
+										List<String> registryList = appAddressMap.get(appName);
 										if (registryList == null) {
 											registryList = new ArrayList<String>();
 										}
@@ -83,7 +94,7 @@ public class JobRegistryHelper {
 										if (!registryList.contains(item.getRegistryValue())) {
 											registryList.add(item.getRegistryValue());
 										}
-										appAddressMap.put(appname, registryList);
+										appAddressMap.put(appName, registryList);
 									}
 								}
 							}
@@ -113,6 +124,7 @@ public class JobRegistryHelper {
 						}
 					}
 					try {
+						// 一次扫描完成之后睡眠一段时间
 						TimeUnit.SECONDS.sleep(RegistryConfig.BEAT_TIMEOUT);
 					} catch (InterruptedException e) {
 						if (!toStop) {
@@ -125,6 +137,7 @@ public class JobRegistryHelper {
 		});
 		registryMonitorThread.setDaemon(true);
 		registryMonitorThread.setName("xxl-job, admin JobRegistryMonitorHelper-registryMonitorThread");
+		// 启动注册管理线程
 		registryMonitorThread.start();
 	}
 

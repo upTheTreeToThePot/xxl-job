@@ -33,6 +33,7 @@ public class WebExceptionResolver implements HandlerExceptionResolver {
 		}
 
 		// if json
+		// 判断是不是 json
 		boolean isJson = false;
 		if (handler instanceof HandlerMethod) {
 			HandlerMethod method = (HandlerMethod)handler;

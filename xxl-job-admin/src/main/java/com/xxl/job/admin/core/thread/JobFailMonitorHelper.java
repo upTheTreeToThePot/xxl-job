@@ -28,6 +28,8 @@ public class JobFailMonitorHelper {
 
 	private Thread monitorThread;
 	private volatile boolean toStop = false;
+	// 声明一条管理线程，对前 1000 条失败的任务进行处理：
+	//	1。进行任务重试	2。进行 email 报警
 	public void start(){
 		monitorThread = new Thread(new Runnable() {
 
@@ -43,6 +45,7 @@ public class JobFailMonitorHelper {
 							for (long failLogId: failLogIds) {
 
 								// lock log
+								// 更新 alarmStatus 为 -1，-1 为锁定状态，如果更新失败，不做处理，continue
 								int lockRet = XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().updateAlarmStatus(failLogId, 0, -1);
 								if (lockRet < 1) {
 									continue;
@@ -51,6 +54,7 @@ public class JobFailMonitorHelper {
 								XxlJobInfo info = XxlJobAdminConfig.getAdminConfig().getXxlJobInfoDao().loadById(log.getJobId());
 
 								// 1、fail retry monitor
+								// 如果当前任务的 executorFailRetryCount 大于 0，将会执行任务重试
 								if (log.getExecutorFailRetryCount() > 0) {
 									JobTriggerPoolHelper.trigger(log.getJobId(), TriggerTypeEnum.RETRY, (log.getExecutorFailRetryCount()-1), log.getExecutorShardingParam(), log.getExecutorParam(), null);
 									String retryMsg = "<br><br><span style=\"color:#F39C12;\" > >>>>>>>>>>>"+ I18nUtil.getString("jobconf_trigger_type_retry") +"<<<<<<<<<<< </span><br>";
@@ -59,6 +63,7 @@ public class JobFailMonitorHelper {
 								}
 
 								// 2、fail alarm monitor
+								// 报警 并更新报警状态
 								int newAlarmStatus = 0;		// 告警状态：0-默认、-1=锁定状态、1-无需告警、2-告警成功、3-告警失败
 								if (info != null) {
 									boolean alarmResult = XxlJobAdminConfig.getAdminConfig().getJobAlarmer().alarm(info, log);

@@ -9,6 +9,7 @@ import java.util.List;
 /**
  * Created by xuxueli on 17/3/10.
  */
+// 选择最后一台机器
 public class ExecutorRouteLast extends ExecutorRouter {
 
     @Override

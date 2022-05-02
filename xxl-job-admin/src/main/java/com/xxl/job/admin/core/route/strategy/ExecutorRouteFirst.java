@@ -9,6 +9,7 @@ import java.util.List;
 /**
  * Created by xuxueli on 17/3/10.
  */
+// 选择第一台机器
 public class ExecutorRouteFirst extends ExecutorRouter {
 
     @Override
