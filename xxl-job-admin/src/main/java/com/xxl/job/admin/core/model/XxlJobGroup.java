@@ -8,6 +8,7 @@ import java.util.List;
 /**
  * Created by xuxueli on 16/9/30.
  */
+// 执行器信息表，维护执行器信息
 public class XxlJobGroup {
 
     private int id;

@@ -77,6 +77,7 @@ public class JobGroupController {
 		if (xxlJobGroup.getTitle().contains(">") || xxlJobGroup.getTitle().contains("<")) {
 			return new ReturnT<String>(500, I18nUtil.getString("jobgroup_field_title")+I18nUtil.getString("system_unvalid") );
 		}
+		// 手动录入
 		if (xxlJobGroup.getAddressType()!=0) {
 			if (xxlJobGroup.getAddressList()==null || xxlJobGroup.getAddressList().trim().length()==0) {
 				return new ReturnT<String>(500, I18nUtil.getString("jobgroup_field_addressType_limit") );

@@ -30,7 +30,7 @@ public class JobRegistryHelper {
 	private Thread registryMonitorThread;
 	private volatile boolean toStop = false;
 
-	// 1。创建以恶搞注册或移除的线程池
+	// 1。创建一个注册或移除的线程池
 	// 2。创建一个注册管理线程，并启动
 	//		管理：定期扫描 超过死亡时间没有更新的注册任务并移除	未死亡的注册任务，刷新他们的地址配置，并更新落库
 	//			死亡时间是线程沉睡时间的三倍，默认沉睡时间是 30s

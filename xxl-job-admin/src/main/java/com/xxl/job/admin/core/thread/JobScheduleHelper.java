@@ -213,6 +213,7 @@ public class JobScheduleHelper {
                         try {
                             // pre-read period: success > scan each second; fail > skip this period;
                             // 如果执行成功，睡眠1s，如果执行失败，睡眠跳过这个周期 5s
+                            //如果失败，则说明本轮没有数据被搜索到，搜索的时间范围是now+PRE_READ_MS,所以增长睡眠时间到PRE_READ_MS
                             TimeUnit.MILLISECONDS.sleep((preReadSuc?1000:PRE_READ_MS) - System.currentTimeMillis()%1000);
                         } catch (InterruptedException e) {
                             if (!scheduleThreadToStop) {

@@ -6,6 +6,7 @@ import java.util.Date;
  * xxl-job log, used to track trigger process
  * @author xuxueli  2015-12-19 23:19:09
  */
+// 调度日志表，用于保存 xxl-job 调度任务的扩展信息，如任务分组，任务名，机器地址，执行器，执行入参和报警邮件等
 public class XxlJobLog {
 	
 	private long id;
